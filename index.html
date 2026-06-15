@@ -236,7 +236,7 @@ tbody tr:last-child td{border-bottom:none}
   <!-- RESULTS -->
   <div id="results" style="display:none">
 
-    <div class="section-head">budget breakdown</div>
+    <div class="section-head">budget breakdown (bonus refers to the advanced tickets you receive upon spending tickets)</div>
     <div class="stat-grid" id="budgetCards"></div>
 
     <div id="wepResults" style="display:none">
@@ -532,13 +532,12 @@ function runSim() {
     }
 
     g('summaryCards').innerHTML = [
-      sc('avg constellation (no bonus)',   avgNB.toFixed(2)+' copies', `≈ ${conLabel(Math.round(avgNB))}`, false),
-      sc('avg constellation (with bonus)', avgB.toFixed(2)+' copies',  `≈ ${conLabel(Math.round(avgB))}`,  true),
+      sc('avg turnout (no bonus)',   avgNB.toFixed(2)+' copies', `≈ ${conLabel(Math.round(avgNB))}`, false),
+      sc('avg turnout (with bonus)', avgB.toFixed(2)+' copies',  `≈ ${conLabel(Math.round(avgB))}`,  true),
       sc('bonus uplift', '+'+(avgB-avgNB).toFixed(2),
          `${((avgB/Math.max(avgNB,.001)-1)*100).toFixed(1)}% more copies`, false),
       sc('raw pulls for 1st copy',     bAvgRaw.toFixed(1), 'avg pull number of first hit', false),
       sc('effective cost (1st copy)',  bAvgEff.toFixed(1), 'raw pulls minus bonus pulls earned', false),
-      sc('P(reaching B0)', pal(nbC,1).toFixed(1)+'%', 'probability of at least 1 copy', false),
     ].join('');
 
     g('noBsub').textContent  = `avg ${avgNB.toFixed(2)} copies · ${avgCharBudget.toLocaleString()} pulls`;
