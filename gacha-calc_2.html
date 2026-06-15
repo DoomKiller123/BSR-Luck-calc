@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gacha Pull Calculator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+:root{
+  --bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;
+  --border:#2a2a35;--border2:#3a3a48;
+  --text:#e8e8f0;--text2:#c0c0d8;--text3:#8a8aa8;
+  --gold:#c9a84c;--gold2:#f0c860;--gold-dim:#6b5520;
+  --blue:#4a90d9;--blue-dim:#1a3558;
+  --green:#3db87a;--red:#e05252;
+  --radius:10px;--radius-lg:16px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+#stars{position:fixed;inset:0;pointer-events:none;z-index:0;background:
+  radial-gradient(1px 1px at 10% 15%,rgba(255,255,255,.5) 0%,transparent 100%),
+  radial-gradient(1px 1px at 30% 45%,rgba(255,255,255,.3) 0%,transparent 100%),
+  radial-gradient(1px 1px at 55% 25%,rgba(255,255,255,.4) 0%,transparent 100%),
+  radial-gradient(1px 1px at 75% 60%,rgba(255,255,255,.3) 0%,transparent 100%),
+  radial-gradient(1px 1px at 90% 10%,rgba(255,255,255,.5) 0%,transparent 100%),
+  radial-gradient(1px 1px at 20% 80%,rgba(255,255,255,.2) 0%,transparent 100%),
+  radial-gradient(1px 1px at 60% 85%,rgba(255,255,255,.3) 0%,transparent 100%),
+  radial-gradient(1.5px 1.5px at 45% 70%,rgba(201,168,76,.6) 0%,transparent 100%),
+  radial-gradient(1.5px 1.5px at 70% 20%,rgba(201,168,76,.4) 0%,transparent 100%)}
+.wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:0 20px 80px}
+
+/* cog */
+.adv-cog{position:fixed;top:18px;right:22px;z-index:100;width:38px;height:38px;border-radius:50%;background:var(--bg2);border:0.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;color:var(--text2)}
+.adv-cog:hover{border-color:var(--gold);color:var(--gold)}
+
+/* drawer */
+.adv-drawer{position:fixed;top:66px;right:16px;z-index:99;width:min(460px,calc(100vw - 32px));background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.75);display:none;max-height:calc(100vh - 100px);overflow-y:auto}
+.adv-drawer.open{display:block}
+.adv-drawer-title{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text2);margin-bottom:18px}
+.adv-section{margin-bottom:20px}
+.adv-section-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;font-weight:700}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sfield{background:var(--bg3);border-radius:var(--radius);padding:12px;border:0.5px solid var(--border)}
+.sfield label{font-size:10px;color:var(--text3);display:block;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase}
+.srow{display:flex;align-items:center;gap:8px}
+.srow input[type=range]{flex:1;accent-color:var(--gold);-webkit-appearance:none;height:3px;background:var(--border2);border-radius:2px;outline:none}
+.srow input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--gold);cursor:pointer}
+.sval{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--gold);min-width:36px;text-align:right}
+
+/* hero */
+.hero{text-align:center;padding:64px 0 40px}
+.hero-eyebrow{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase;margin-bottom:16px}
+.hero h1{font-size:clamp(30px,6vw,54px);font-weight:700;line-height:1.08;letter-spacing:-.02em;background:linear-gradient(135deg,var(--gold2) 0%,#fff 50%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px}
+.hero p{font-size:15px;color:var(--text2);max-width:460px;margin:0 auto;line-height:1.6}
+
+/* card */
+.card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:14px}
+.card-title{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text2);margin-bottom:16px}
+
+/* fields */
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:480px){.input-row{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:7px}
+.field label{font-size:13px;color:var(--text2);font-weight:600}
+.field input[type=number]{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:'Space Mono',monospace;font-size:22px;font-weight:700;padding:14px 16px;width:100%;outline:none;transition:border-color .15s;-moz-appearance:textfield}
+.field input[type=number]::-webkit-inner-spin-button,.field input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+.field input[type=number]:focus{border-color:var(--gold)}
+.field-note{font-size:11px;color:var(--text3)}
+
+/* weapon toggle */
+.wep-row{display:flex;align-items:flex-start;gap:14px;padding:16px;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:border-color .15s;margin-top:16px}
+.wep-row:hover{border-color:var(--gold-dim)}
+.wep-row.active{border-color:var(--gold)}
+.wep-check{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--border2);background:transparent;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.wep-row.active .wep-check{background:var(--gold);border-color:var(--gold)}
+.wep-check svg{display:none}
+.wep-row.active .wep-check svg{display:block}
+.wep-text h3{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px}
+.wep-text p{font-size:12px;color:var(--text2);line-height:1.5}
+.wep-extra{margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border);display:none}
+.wep-extra.show{display:block}
+.wep-extra-label{font-size:12px;color:var(--text2);margin-bottom:10px;font-weight:500}
+.seg{display:flex;border-radius:var(--radius);overflow:hidden;border:0.5px solid var(--border2);width:fit-content}
+.seg button{padding:8px 22px;font-size:13px;font-weight:600;background:transparent;color:var(--text2);border:none;border-right:0.5px solid var(--border2);cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .15s}
+.seg button:last-child{border-right:none}
+.seg button.active{background:var(--gold);color:#0a0a0f}
+
+/* budget line */
+.budget-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--text2);margin-top:14px;padding:11px 15px;background:var(--bg3);border-radius:var(--radius);border:0.5px solid var(--border)}
+.tag{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.02em}
+.tag-gold{background:var(--gold-dim);color:var(--gold2)}
+.tag-blue{background:var(--blue-dim);color:var(--blue)}
+.tag-red{background:#3d1515;color:var(--red)}
+
+/* run */
+.run-wrap{text-align:center;margin:22px 0 6px}
+.run-btn{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--gold) 0%,var(--gold2) 100%);color:#0a0a0f;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:.04em;padding:14px 44px;border-radius:50px;border:none;cursor:pointer;transition:all .2s;box-shadow:0 0 30px rgba(201,168,76,.25)}
+.run-btn:hover{transform:translateY(-1px);box-shadow:0 0 44px rgba(201,168,76,.4)}
+.run-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.prog-wrap{margin:10px 0 0}
+.prog-track{height:2px;background:var(--border);border-radius:1px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:1px;width:0%;transition:width .2s}
+.prog-label{font-size:11px;color:var(--text3);text-align:center;margin-top:7px;font-family:'Space Mono',monospace;min-height:16px}
+
+/* section headings — bright white */
+.section-head{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text);margin:28px 0 12px;display:flex;align-items:center;gap:10px}
+.section-head::after{content:'';flex:1;height:0.5px;background:var(--border2)}
+
+/* stat cards */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.stat-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:16px}
+.stat-card.hi{border-color:var(--gold-dim);background:rgba(201,168,76,.06)}
+.stat-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.09em;margin-bottom:5px;font-weight:700}
+.stat-val{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:var(--text)}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:4px}
+
+/* dist panels */
+.panel-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+@media(max-width:520px){.panel-row{grid-template-columns:1fr}}
+.dist-panel{background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:20px}
+.dist-panel-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+.dist-panel-sub{font-size:11px;color:var(--text3);margin-bottom:14px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.bar-lbl{font-size:11px;color:var(--text2);width:34px;flex-shrink:0;font-family:'Space Mono',monospace;font-weight:700}
+.bar-track{flex:1;background:var(--border);border-radius:3px;height:16px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:10px;font-weight:700;font-family:'Space Mono',monospace;color:#0a0a0f}
+
+/* table */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{text-align:left;padding:10px 12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);border-bottom:0.5px solid var(--border);font-weight:700;white-space:nowrap}
+tbody td{padding:9px 12px;border-bottom:0.5px solid var(--border);color:var(--text);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+.td-r{text-align:right;font-family:'Space Mono',monospace;font-size:12px}
+.pbar-wrap{width:90px}
+.pbar-track{background:var(--border);border-radius:3px;height:10px;overflow:hidden;margin-bottom:2px}
+.pbar-inner{height:100%;border-radius:3px}
+.legend{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3)}
+.legend-dot{width:10px;height:10px;border-radius:2px}
+.b-badge{display:inline-block;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(201,168,76,.12);color:var(--gold2);margin-right:6px}
+.footer{text-align:center;font-size:12px;color:var(--text3);padding:36px 0 0;line-height:1.8}
+</style>
+</head>
+<body>
+<div id="stars"></div>
+
+<!-- cog -->
+<button class="adv-cog" id="advCog" onclick="toggleAdv()" title="Advanced settings">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.3"/>
+    <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M2.93 2.93l1.06 1.06M12.01 12.01l1.06 1.06M13.07 2.93l-1.06 1.06M3.99 12.01l-1.06 1.06" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+  </svg>
+</button>
+
+<!-- advanced drawer -->
+<div class="adv-drawer" id="advDrawer">
+  <div class="adv-drawer-title">Advanced settings</div>
+  <div class="adv-section">
+    <div class="adv-section-label">Character banner · pity</div>
+    <div class="sgrid">
+      <div class="sfield"><label>Base rate</label><div class="srow"><input type="range" id="baseR" min="0.1" max="3" step="0.1" value="0.8"><span class="sval" id="baseRV">0.8%</span></div></div>
+      <div class="sfield"><label>Soft pity start</label><div class="srow"><input type="range" id="softP" min="40" max="100" step="5" value="70"><span class="sval" id="softPV">70</span></div></div>
+      <div class="sfield"><label>Hard pity</label><div class="srow"><input type="range" id="hardP" min="40" max="120" step="5" value="80"><span class="sval" id="hardPV">80</span></div></div>
+      <div class="sfield"><label>Jades per pull</label><div class="srow"><input type="range" id="j2p" min="100" max="300" step="10" value="160"><span class="sval" id="j2pV">160</span></div></div>
+    </div>
+  </div>
+  <div class="adv-section">
+    <div class="adv-section-label">Character banner · bonus pulls</div>
+    <div class="sgrid">
+      <div class="sfield"><label>Free pulls per copy</label><div class="srow"><input type="range" id="bpc" min="0" max="10" step="1" value="2"><span class="sval" id="bpcV">2</span></div></div>
+      <div class="sfield"><label>Refund per 10 pulls</label><div class="srow"><input type="range" id="bp10" min="0" max="3" step="0.05" value="1"><span class="sval" id="bp10V">1.00</span></div></div>
+    </div>
+  </div>
+  <div class="adv-section" style="margin-bottom:0">
+    <div class="adv-section-label">Weapon banner</div>
+    <div class="sgrid">
+      <div class="sfield"><label>Base rate</label><div class="srow"><input type="range" id="wBaseR" min="0.5" max="3" step="0.1" value="1"><span class="sval" id="wBaseRV">1.0%</span></div></div>
+      <div class="sfield"><label>Soft pity start</label><div class="srow"><input type="range" id="wSoftP" min="20" max="60" step="5" value="30"><span class="sval" id="wSoftPV">30</span></div></div>
+      <div class="sfield"><label>Hard pity</label><div class="srow"><input type="range" id="wHardP" min="30" max="80" step="5" value="40"><span class="sval" id="wHardPV">40</span></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-eyebrow">✦ pull probability calculator ✦</div>
+    <h1>How lucky<br>will you be?</h1>
+    <p>Enter your resources. We'll simulate 500,000 accounts and show you exactly what to expect.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">your resources</div>
+    <div class="input-row">
+      <div class="field">
+        <label for="jadesInput">Jades</label>
+        <input type="number" id="jadesInput" value="19200" min="0" step="1">
+        <span class="field-note" id="jadePullNote">160 jades = 1 pull · 19200 jades = 120 pulls</span>
+      </div>
+      <div class="field">
+        <label for="ticketsInput">Tickets</label>
+        <input type="number" id="ticketsInput" value="0" min="0" step="1">
+        <span class="field-note">1 ticket = 1 pull (character banner only)</span>
+      </div>
+    </div>
+
+    <div class="wep-row active" id="wepRow" onclick="toggleWep()">
+      <div class="wep-check">
+        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="wep-text">
+        <h3>Pulling weapon banner first</h3>
+        <p>Weapon pulls are deducted from your jade pulls</p>
+      </div>
+    </div>
+    <div class="wep-extra show" id="wepExtra">
+      <div class="wep-extra-label">Weapon refinement target</div>
+      <div class="seg" id="refineSeg">
+        <button class="seg-btn active" data-val="1">A1</button>
+        <button class="seg-btn" data-val="3">A3</button>
+        <button class="seg-btn" data-val="5">A5</button>
+      </div>
+    </div>
+
+    <div class="budget-line" id="budgetLine"></div>
+  </div>
+
+  <div class="run-wrap">
+    <button class="run-btn" id="runBtn" onclick="runSim()">✦ Calculate my odds</button>
+  </div>
+  <div class="prog-wrap">
+    <div class="prog-track"><div class="prog-fill" id="prog"></div></div>
+    <div class="prog-label" id="progLabel"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results" style="display:none">
+
+    <div class="section-head">budget breakdown</div>
+    <div class="stat-grid" id="budgetCards"></div>
+
+    <div id="wepResults" style="display:none">
+      <div class="section-head">weapon banner</div>
+      <div class="stat-grid" id="wepCards"></div>
+    </div>
+
+    <div class="section-head">character constellation results</div>
+    <div class="stat-grid" id="summaryCards"></div>
+
+    <div class="panel-row">
+      <div class="dist-panel">
+        <div class="dist-panel-title">Without bonuses</div>
+        <div class="dist-panel-sub" id="noBsub"></div>
+        <div id="noBbars"></div>
+      </div>
+      <div class="dist-panel">
+        <div class="dist-panel-title">With bonuses</div>
+        <div class="dist-panel-sub" id="Bsub"></div>
+        <div id="Bbars"></div>
+      </div>
+    </div>
+
+    <div class="section-head">constellation probability table</div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6">Exact = share of accounts ending at exactly that constellation. P(≥) = probability of reaching it or above.</p>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>constellation</th>
+            <th class="td-r">exact % (no bonus)</th>
+            <th class="td-r">exact % (bonus)</th>
+            <th class="td-r">P(≥) no bonus</th>
+            <th class="td-r">P(≥) bonus</th>
+            <th>visual</th>
+          </tr></thead>
+          <tbody id="probTable"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#5a5a70"></div>without bonuses</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>with bonuses</div>
+    </div>
+
+    <div class="footer">
+      <p>Monte Carlo simulation · 500,000 accounts · soft pity modelled as linear ramp</p>
+      <p>Results are probabilistic estimates, not guarantees.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const g = id => document.getElementById(id);
+let wepActive = true;
+let refineTarget = 1;
+
+// ── constellation label ──
+// 1 copy = B0, 2 = B1 … 7 = B6, 7+ lumped into B6
+function conLabel(copies) {
+  if (copies <= 0) return 'none';
+  if (copies >= 7) return 'B6';
+  return 'B' + (copies - 1);
+}
+
+// ── advanced drawer ──
+let advOpen = false;
+function toggleAdv() {
+  advOpen = !advOpen;
+  g('advDrawer').classList.toggle('open', advOpen);
+}
+document.addEventListener('click', e => {
+  if (advOpen && !g('advDrawer').contains(e.target) && !g('advCog').contains(e.target)) {
+    advOpen = false;
+    g('advDrawer').classList.remove('open');
+  }
+});
+
+// ── slider bindings ──
+[['baseR','baseRV',v=>parseFloat(v).toFixed(1)+'%'],
+ ['softP','softPV',v=>v],['hardP','hardPV',v=>v],
+ ['bpc','bpcV',v=>v],['bp10','bp10V',v=>parseFloat(v).toFixed(2)],
+ ['j2p','j2pV',v=>v],
+ ['wBaseR','wBaseRV',v=>parseFloat(v).toFixed(1)+'%'],
+ ['wSoftP','wSoftPV',v=>v],['wHardP','wHardPV',v=>v]
+].forEach(([id,vid,fmt])=>{ g(id).oninput=()=>{g(vid).textContent=fmt(g(id).value);updateBudget();}; });
+['jadesInput','ticketsInput'].forEach(id=>g(id).addEventListener('input',updateBudget));
+
+// ── weapon toggle ──
+function toggleWep() {
+  wepActive = !wepActive;
+  g('wepRow').classList.toggle('active', wepActive);
+  g('wepExtra').classList.toggle('show', wepActive);
+  updateBudget();
+}
+g('refineSeg').addEventListener('click', e => {
+  if (!e.target.matches('button')) return;
+  g('refineSeg').querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+  e.target.classList.add('active');
+  refineTarget = parseInt(e.target.dataset.val);
+  updateBudget();
+});
+
+// ── budget preview ──
+// FORMULA: char_pulls = (jades / j2p) - wep_pulls_spent + tickets
+// Weapon pulls come out of the jade pull pool. Tickets are additive on top for char banner.
+function getParams() {
+  const jades   = Math.max(0, parseInt(g('jadesInput').value)||0);
+  const tickets = Math.max(0, parseInt(g('ticketsInput').value)||0);
+  const j2p     = parseInt(g('j2p').value);
+  const jadePulls = Math.floor(jades / j2p);
+  return { jades, tickets, j2p, jadePulls };
+}
+
+function estWepPulls() {
+  // rough analytic estimate for preview label only
+  const wBase = parseFloat(g('wBaseR').value) / 100;
+  const wHard = parseInt(g('wHardP').value);
+  // expected pulls per copy ≈ 1/rate (capped at hard pity)
+  const perCopy = Math.min(wHard, Math.round(1 / wBase));
+  return refineTarget * perCopy;
+}
+
+function updateBudget() {
+  const p = getParams();
+  const jadePulls = p.jadePulls;
+  const tickets = p.tickets;
+  const j2p = p.j2p;
+
+  // update jade pull note
+  g('jadePullNote').textContent = `160 jades = 1 pull · ${p.jades.toLocaleString()} jades = ${jadePulls.toLocaleString()} pulls`;
+
+  let html;
+  if (wepActive) {
+    const est = estWepPulls();
+    const charPulls = Math.max(0, jadePulls - est) + tickets;
+    html = `<span class="tag tag-gold">${jadePulls.toLocaleString()} jade pulls</span>`
+         + ` − <span class="tag tag-red">~${est} weapon pulls</span>`
+         + ` + <span class="tag tag-blue">${tickets.toLocaleString()} tickets</span>`
+         + ` = <strong style="color:var(--gold2);font-family:'Space Mono',monospace">`
+         + `~${Math.max(0,charPulls).toLocaleString()} character pulls</strong>`;
+  } else {
+    const charPulls = jadePulls + tickets;
+    html = `<span class="tag tag-gold">${jadePulls.toLocaleString()} jade pulls</span>`
+         + ` + <span class="tag tag-blue">${tickets.toLocaleString()} tickets</span>`
+         + ` = <strong style="color:var(--gold2);font-family:'Space Mono',monospace">`
+         + `${charPulls.toLocaleString()} character pulls</strong>`;
+  }
+  g('budgetLine').innerHTML = html;
+}
+updateBudget();
+
+// ── worker code as a string (runs entirely off main thread) ──
+const WORKER_SRC = `
+function getRate(pity, base, soft, hard) {
+  const b = base / 100;
+  if (pity >= hard - 1) return 1.0;
+  if (pity >= soft) { const t=(pity-soft)/(hard-soft-1); return Math.min(1,b+t*(1-b)); }
+  return b;
+}
+function doWep(jadePulls, target, wBase, wSoft, wHard) {
+  let rem=jadePulls, pity=0, copies=0, spent=0;
+  while (copies < target && rem > 0) {
+    rem--; spent++;
+    if (Math.random() < getRate(pity,wBase,wSoft,wHard)) { pity=0; copies++; } else pity++;
+  }
+  return { spent, copies };
+}
+function doCharNB(budget, base, soft, hard) {
+  let rem=budget, pity=0, copies=0, t=0, rf=0, ff=false;
+  while (rem > 0) {
+    rem--; t++;
+    if (Math.random() < getRate(pity,base,soft,hard)) { pity=0; copies++; if(!ff){rf=t;ff=true;} }
+    else pity++;
+  }
+  return { copies, rf, ff };
+}
+function doCharB(budget, base, soft, hard, bpc, bp10) {
+  let rem=budget, frac=0, pity=0, copies=0, t=0, be=0, rf=0, bef=0, ff=false;
+  while (rem > 0) {
+    rem--; t++;
+    frac += bp10 / 10;
+    if (frac >= 1) { const w=Math.floor(frac); rem+=w; be+=w; frac-=w; }
+    if (Math.random() < getRate(pity,base,soft,hard)) {
+      pity=0; copies++; rem+=bpc; be+=bpc;
+      if (!ff) { rf=t; bef=be; ff=true; }
+    } else pity++;
+  }
+  return { copies, rf, bef, ff };
+}
+self.onmessage = function(e) {
+  const { jadePulls, tickets, wepActive, refineTarget,
+          base, soft, hard, bpc, bp10,
+          wBase, wSoft, wHard, N, CHUNK } = e.data;
+  const SZ = 8;
+  const nbC = new Array(SZ).fill(0);
+  const bC  = new Array(SZ).fill(0);
+  let nbRF=0, bRF=0, bEF=0, nbFN=0, bFN=0;
+  let wepSpentSum=0, wepGotSum=0;
+  const chunks = N / CHUNK;
+  for (let c=0; c<chunks; c++) {
+    for (let i=0; i<CHUNK; i++) {
+      let charBudget;
+      if (wepActive) {
+        const w = doWep(jadePulls, refineTarget, wBase, wSoft, wHard);
+        wepSpentSum += w.spent; wepGotSum += w.copies;
+        charBudget = Math.max(0, jadePulls - w.spent) + tickets;
+      } else {
+        charBudget = jadePulls + tickets;
+      }
+      const nb = doCharNB(charBudget, base, soft, hard);
+      nbC[Math.min(nb.copies, SZ-1)]++;
+      if (nb.ff) { nbRF += nb.rf; nbFN++; }
+      const b = doCharB(charBudget, base, soft, hard, bpc, bp10);
+      bC[Math.min(b.copies, SZ-1)]++;
+      if (b.ff) { bRF += b.rf; bEF += (b.rf - b.bef); bFN++; }
+    }
+    self.postMessage({ type:'progress', done:(c+1)*CHUNK, total:N });
+  }
+  self.postMessage({ type:'done', nbC, bC, nbRF, bRF, bEF, nbFN, bFN, wepSpentSum, wepGotSum });
+};
+`;
+
+function runSim() {
+  const p     = getParams();
+  const base  = parseFloat(g('baseR').value);
+  const soft  = parseInt(g('softP').value);
+  const hard  = parseInt(g('hardP').value);
+  const bpc   = parseInt(g('bpc').value);
+  const bp10  = parseFloat(g('bp10').value);
+  const wBase = parseFloat(g('wBaseR').value);
+  const wSoft = parseInt(g('wSoftP').value);
+  const wHard = parseInt(g('wHardP').value);
+  const N     = 500000;
+  const CHUNK = 10000;
+
+  g('runBtn').disabled = true;
+  g('results').style.display = 'none';
+  g('prog').style.width = '2%';
+  g('progLabel').textContent = 'running simulation…';
+
+  const blob   = new Blob([WORKER_SRC], { type: 'application/javascript' });
+  const url    = URL.createObjectURL(blob);
+  const worker = new Worker(url);
+
+  worker.postMessage({
+    jadePulls: p.jadePulls, tickets: p.tickets,
+    wepActive, refineTarget,
+    base, soft, hard, bpc, bp10,
+    wBase, wSoft, wHard, N, CHUNK
+  });
+
+  worker.onmessage = function(e) {
+    const msg = e.data;
+    if (msg.type === 'progress') {
+      const pct = Math.round(msg.done / msg.total * 100);
+      g('prog').style.width = pct + '%';
+      g('progLabel').textContent = `simulating ${msg.done.toLocaleString()} / ${msg.total.toLocaleString()} accounts…`;
+      return;
+    }
+    // done
+    worker.terminate();
+    URL.revokeObjectURL(url);
+
+    const { nbC, bC, nbRF, bRF, bEF, nbFN, bFN, wepSpentSum } = msg;
+
+    const avgNB = avgC(nbC), avgB = avgC(bC);
+    const avgWepSpent = wepActive ? Math.round(wepSpentSum / N) : 0;
+    const avgCharBudget = wepActive
+      ? Math.max(0, p.jadePulls - avgWepSpent) + p.tickets
+      : p.jadePulls + p.tickets;
+    const bAvgRaw = bFN > 0 ? bRF / bFN : 0;
+    const bAvgEff = bFN > 0 ? bEF / bFN : 0;
+
+    g('budgetCards').innerHTML = [
+      sc('jade pulls',      p.jadePulls.toLocaleString(),      `${p.jades.toLocaleString()} ÷ ${p.j2p}`, false),
+      sc('tickets',         p.tickets.toLocaleString(),         'added to character banner', false),
+      sc('avg weapon cost', wepActive ? avgWepSpent.toLocaleString()+' pulls' : 'n/a',
+         wepActive ? `A${refineTarget} · deducted from jade pulls` : 'weapon off', false),
+      sc('character pulls', avgCharBudget.toLocaleString(),     'jade pulls − weapon + tickets', true),
+    ].join('');
+
+    if (wepActive) {
+      g('wepResults').style.display = '';
+      g('wepCards').innerHTML = [
+        sc('avg pulls on weapon',  avgWepSpent.toLocaleString(),
+           `for A${refineTarget} · from jade pool`, false),
+        sc('jade pulls remaining', Math.max(0, p.jadePulls - avgWepSpent).toLocaleString(),
+           'after weapon banner', false),
+      ].join('');
+    } else {
+      g('wepResults').style.display = 'none';
+    }
+
+    g('summaryCards').innerHTML = [
+      sc('avg constellation (no bonus)',   avgNB.toFixed(2)+' copies', `≈ ${conLabel(Math.round(avgNB))}`, false),
+      sc('avg constellation (with bonus)', avgB.toFixed(2)+' copies',  `≈ ${conLabel(Math.round(avgB))}`,  true),
+      sc('bonus uplift', '+'+(avgB-avgNB).toFixed(2),
+         `${((avgB/Math.max(avgNB,.001)-1)*100).toFixed(1)}% more copies`, false),
+      sc('raw pulls for 1st copy',     bAvgRaw.toFixed(1), 'avg pull number of first hit', false),
+      sc('effective cost (1st copy)',  bAvgEff.toFixed(1), 'raw pulls minus bonus pulls earned', false),
+      sc('P(reaching B0)', pal(nbC,1).toFixed(1)+'%', 'probability of at least 1 copy', false),
+    ].join('');
+
+    g('noBsub').textContent  = `avg ${avgNB.toFixed(2)} copies · ${avgCharBudget.toLocaleString()} pulls`;
+    g('Bsub').textContent    = `avg ${avgB.toFixed(2)} copies · ${avgCharBudget.toLocaleString()} pulls`;
+    g('noBbars').innerHTML   = makeBars(nbC, '#5a5a70');
+    g('Bbars').innerHTML     = makeBars(bC,  '#3db87a');
+    g('probTable').innerHTML = makeProbTable(nbC, bC);
+
+    g('results').style.display = '';
+    g('prog').style.width = '100%';
+    g('progLabel').textContent = '✓ done — 500,000 accounts simulated';
+    g('runBtn').disabled = false;
+    g('results').scrollIntoView({ behavior:'smooth', block:'start' });
+  };
+
+  worker.onerror = function(err) {
+    worker.terminate();
+    URL.revokeObjectURL(url);
+    g('progLabel').textContent = 'error: ' + err.message;
+    g('runBtn').disabled = false;
+  };
+}
+function avgC(c) { let t=0,n=0; c.forEach((v,i)=>{t+=v*i;n+=v;}); return n?t/n:0; }
+function pal(c, k) { const n=c.reduce((a,b)=>a+b,0); return n ? c.slice(k).reduce((a,b)=>a+b,0)/n*100 : 0; }
+function sc(label, val, sub, hi) {
+  return `<div class="stat-card${hi?' hi':''}"><div class="stat-label">${label}</div><div class="stat-val">${val}</div><div class="stat-sub">${sub}</div></div>`;
+}
+
+function makeBars(counts, color) {
+  const n = counts.reduce((a,b)=>a+b,0);
+  const mx = Math.max(...counts.filter(v=>v>0));
+  let html = '';
+  for (let i=0; i<counts.length; i++) {
+    if (!counts[i]) continue;
+    const pct = counts[i]/n*100;
+    const w   = Math.max(2, counts[i]/mx*100);
+    // i=0: no copies, i=1:B0 … i=7:B6(7+ copies)
+    const lbl = i===0 ? 'None' : i>=7 ? 'B6' : 'B'+(i-1);
+    html += `<div class="bar-row">
+      <span class="bar-lbl">${lbl}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${w.toFixed(1)}%;background:${color}">${pct.toFixed(1)}%</div></div>
+    </div>`;
+  }
+  return html;
+}
+
+function makeProbTable(nbC, bC) {
+  const nA = nbC.reduce((a,b)=>a+b,0);
+  const nB = bC.reduce((a,b)=>a+b,0);
+  let html = '';
+  for (let i=0; i<nbC.length; i++) {
+    const eA = nbC[i]/nA*100, eB = bC[i]/nB*100;
+    if (eA < 0.05 && eB < 0.05) continue;
+    const cA = pal(nbC, i), cB = pal(bC, i);
+    // label: i=0 → None, i=1 → B0 (1 copy), i=7 → B6 (7+ copies)
+    const lbl  = i===0 ? 'None' : i>=7 ? 'B6' : 'B'+(i-1);
+    const sub  = i===0 ? '0 copies' : i>=7 ? '7+ copies' : `${i} cop${i===1?'y':'ies'}`;
+    html += `<tr>
+      <td><span class="b-badge">${lbl}</span><span style="font-size:11px;color:var(--text3)">${sub}</span></td>
+      <td class="td-r">${eA.toFixed(1)}%</td>
+      <td class="td-r">${eB.toFixed(1)}%</td>
+      <td class="td-r" style="color:${cA>50?'var(--green)':'var(--text2)'}">${cA.toFixed(1)}%</td>
+      <td class="td-r" style="color:${cB>50?'var(--gold)':'var(--text2)'}">${cB.toFixed(1)}%</td>
+      <td class="pbar-wrap">
+        <div class="pbar-track"><div class="pbar-inner" style="width:${cA.toFixed(1)}%;background:#5a5a70"></div></div>
+        <div class="pbar-track"><div class="pbar-inner" style="width:${cB.toFixed(1)}%;background:#3db87a"></div></div>
+      </td>
+    </tr>`;
+  }
+  return html;
+}
+</script>
+</body>
+</html>
